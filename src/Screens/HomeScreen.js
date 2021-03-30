@@ -8,7 +8,6 @@ export default function HomeScreen(props) {
         <View style={styles.container}>
             <Text style={styles.title}>Auth Home</Text>
             <Btn t='Email' f={() => { props.navigation.navigate('Email') }} />
-            <Btn t='Email' f={() => { props.navigation.navigate('Email') }} />
         </View>
     )
 }
