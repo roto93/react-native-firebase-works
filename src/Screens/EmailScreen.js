@@ -24,9 +24,10 @@ export default function EmailScreen() {
         auth.signOut()
     }
     const onDelete = () => {
-        auth.currentUser.delete()
-            .then((result) => { setIsLoggedIn(false), alert('User has been deleted!') })
-            .catch(err => { setShowReAuthModal(true), console.log(err) })
+        if (auth.currentUser)   // 如果未登入 auth.currentUser 會是 null，則 null.delete() 會報錯
+            auth.currentUser.delete()
+                .then((result) => { setIsLoggedIn(false), alert('User has been deleted!') })
+                .catch(err => { setShowReAuthModal(true), console.log(err) })
     }
     const onReAuth = () => {
         const credential = firebase.auth.EmailAuthProvider.credential(
@@ -100,7 +101,7 @@ export default function EmailScreen() {
                         value={confirmPass}
                         onChangeText={(text) => { setConfirmPass(text) }}
                     />
-                    <Btn t={'confirm'} f={() => { onReAuth() }} />
+                    <Btn t={'confirm'} f={() => { onReAuth(), onDelete() }} />
                 </View>
             </Modal>
         </View>
