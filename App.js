@@ -6,6 +6,7 @@ import { NavigationContainer, } from '@react-navigation/native'
 import { createStackNavigator } from '@react-navigation/stack'
 import EmailScreen from './src/Screens/EmailScreen';
 import HomeScreen from './src/Screens/HomeScreen';
+import AnonymousScreen from './src/Screens/AnonymousScreen'
 
 if (firebase.apps.length == 0) { firebase.initializeApp(firebaseConfig) }  // 檢查現在有沒有其他在firebase初始化的app，不可以同時有兩個初始化
 
@@ -17,6 +18,7 @@ function App(props) {
             <Stack.Navigator>
                 <Stack.Screen name={'Home'} component={HomeScreen} />
                 <Stack.Screen name={'Email'} component={EmailScreen} />
+                <Stack.Screen name={'Anonymous'} component={AnonymousScreen} />
             </Stack.Navigator>
         </NavigationContainer>
     );
