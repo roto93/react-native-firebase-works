@@ -56,9 +56,9 @@ function LoginScreen(props) {
                         }
                         else {
                             firebase.database()
-                            .ref('/users/' + result.user.uid).update({
-                                last_logged_in: Date.now()
-                            })
+                                .ref('/users/' + result.user.uid).update({
+                                    last_logged_in: Date.now()
+                                })
                         }
                     })
                     .catch((error) => {
@@ -81,7 +81,7 @@ function LoginScreen(props) {
             var providerData = firebaseUser.providerData;
             for (var i = 0; i < providerData.length; i++) {
                 if (providerData[i].providerId === firebase.auth.GoogleAuthProvider.PROVIDER_ID &&
-                    providerData[i].uid === googleUser.getBasicProfile().getId()) {
+                    providerData[i].uid === googleUser.user.id) {
                     // We don't need to reauth the Firebase connection.
                     return true;
                 }

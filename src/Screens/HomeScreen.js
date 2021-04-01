@@ -9,6 +9,7 @@ export default function HomeScreen(props) {
             <Text style={styles.title}>Auth Home</Text>
             <Btn t='Email' f={() => { props.navigation.navigate('Email') }} />
             <Btn t='Anonymous' f={() => { props.navigation.navigate('Anonymous') }} />
+            <Btn t='Google' f={() => { props.navigation.navigate('Google') }} />
         </View>
     )
 }
