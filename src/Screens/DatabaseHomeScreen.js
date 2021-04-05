@@ -3,13 +3,11 @@ import { StyleSheet, Text, View } from 'react-native'
 import Btn from '../components/Btn';
 
 
-export default function HomeScreen(props) {
+export default function DatabaseHomeScreen(props) {
     return (
         <View style={styles.container}>
-            <Text style={styles.title}>Auth Home</Text>
-            <Btn t='Email' f={() => { props.navigation.navigate('Email') }} />
-            <Btn t='Anonymous' f={() => { props.navigation.navigate('Anonymous') }} />
-            <Btn t='Google' f={() => { props.navigation.navigate('Google') }} />
+            <Text style={styles.title}>Database Home</Text>
+            <Btn t={'Read and Write'} f={() => { props.navigation.navigate('RW') }} />
         </View>
     )
 }

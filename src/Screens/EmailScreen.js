@@ -17,7 +17,17 @@ export default function EmailScreen() {
     }
     const onSignIn = () => {
         // TODO: Check real email
-        auth.createUserWithEmailAndPassword(email, pass).catch(err => alert(err))
+        auth.createUserWithEmailAndPassword(email, pass)
+            .catch(e => {
+
+                if (e.code == 'auth/email-already-in-use') {
+                    auth.fetchSignInMethodsForEmail(email)
+                        .then(res => alert(`You should sign in via ${res} `))
+                        .catch(ex => { console.log(ex) })
+                }
+                else alert(e)
+
+            })
     }
     const onSignOut = () => {
         auth.signOut()

@@ -4,7 +4,7 @@ import firebase from 'firebase'
 import Btn from '../../src/components/Btn';
 import Modal from 'react-native-modal'
 
-export default function EmailScreen() {
+export default function AnonymousScreen() {
     const auth = firebase.auth()
     const [showReAuthModal, setShowReAuthModal] = useState(false);
     const [showLinkModal, setShowLinkModal] = useState(false);

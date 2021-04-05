@@ -1,55 +1,74 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, TextInput, Button, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Text, TextInput, Button, TouchableOpacity, Image, Alert } from 'react-native';
 import firebase from 'firebase'
 import Btn from '../../src/components/Btn';
 import Modal from 'react-native-modal'
-import * as Google from 'expo-google-app-auth';
+import * as Facebook from 'expo-facebook';
 
-export default function GoogleScreen() {
+export default function FacebookScreen() {
     const auth = firebase.auth()
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const user = auth.currentUser
+    const [isLoggedIn, setIsLoggedIn] = useState(true);
     const [showReAuthModal, setShowReAuthModal] = useState(false);
     const [confirmPass, setConfirmPass] = useState('');
+    const [token, setToken] = useState('');
     // user state listener
 
-    async function signInWithGoogleAsync() {
+    async function onLogIn() {
+        if (user) { if (user.isAnonymous) await user.delete().then(res => console.log('delete anonymous')) }
         try {
-            const result = await Google.logInAsync({
-                androidClientId: '994735805040-7q2nlrcnma0mssgvs7fimrmdp6dvuaqk.apps.googleusercontent.com', //在這裡貼上你的用戶端編號
-                // iosClientId: YOUR_CLIENT_ID_HERE,
-                scopes: ['profile', 'email'],
+            await Facebook.initializeAsync({
+                appId: '918640535633283',
             });
 
+            //{type,token,expirationDate,permissions,declinedPermissions,}
+            const result = await Facebook.logInWithReadPermissionsAsync({
+                permissions: ['public_profile', 'email'],
+            });
             if (result.type === 'success') {
-                console.log('success')
-                onSignIn(result)
-                return result.accessToken;
-            } else { console.log('cancelled'); return { cancelled: true } }
-        } catch (e) { console.log(e); return { error: true } }
-    }
-    function onSignIn(googleUser) {
-        var unsubscribe = firebase.auth().onAuthStateChanged((firebaseUser) => {
-            unsubscribe();   // 似乎是listener的常用語法，藉由呼叫函式本身，讓後面的程式只運行一次就好
-            if (!isUserEqual(googleUser, firebaseUser)) {
-                var credential = firebase.auth.GoogleAuthProvider.credential(
-                    googleUser.idToken,
-                    googleUser.accessToken
-                );
-
-                firebase.auth().signInWithCredential(credential)
-                    .catch((error) => { alert('onSignInCredential' + error) });
+                // Get the user's name using Facebook's Graph API
+                const response = await fetch(`https://graph.facebook.com/me?access_token=${result.token}`);
+                console.log((await response.json()).name)
+                setToken(result.token)
+                checkLoginState(result)
             } else {
-                console.log('User already signed-in Firebase.');
+                console.log('type = cancel')
+            }
+        } catch ({ message }) {
+            alert(`Facebook Login Error: ${message}`);
+        }
+    }
+
+    function checkLoginState(response) {
+        var unsubscribe = firebase.auth().onAuthStateChanged((firebaseUser) => {
+            unsubscribe();
+            if (!isUserEqual(response, firebaseUser)) {
+                var credential = firebase.auth.FacebookAuthProvider.credential(
+                    response.token);
+                firebase.auth().signInWithCredential(credential)
+                    .then((res) => { console.log('Logged in!') })
+                    .catch((error) => {
+                        console.log(error.code)
+                        if (error.code == 'auth/account-exists-with-different-credential') {
+                            auth.fetchSignInMethodsForEmail(error.email)
+                                .then((res) => { alert(`You should log in with ${res} method`) })
+                                .catch((err) => { console.log('error= ' + err) })
+                        }
+                    });
+            } else {
+                console.log('User is already signed-in Firebase with the correct user.')
             }
         });
+
     }
-    function isUserEqual(googleUser, firebaseUser) {
+
+    function isUserEqual(facebookAuthResponse, firebaseUser) {
         if (firebaseUser) {
             var providerData = firebaseUser.providerData;
             for (var i = 0; i < providerData.length; i++) {
-                if (providerData[i].providerId === firebase.auth.GoogleAuthProvider.PROVIDER_ID &&
-                    providerData[i].uid === googleUser.user.id) {
-                    // We don't need to reauth the Firebase connection.
+                if (providerData[i].providerId === firebase.auth.FacebookAuthProvider.PROVIDER_ID &&
+                    providerData[i].uid === facebookAuthResponse.userID) {
+                    // We don't need to re-auth the Firebase connection.
                     return true;
                 }
             }
@@ -57,8 +76,10 @@ export default function GoogleScreen() {
         return false;
     }
 
-    const onSignOut = () => {
+    const onSignOut = async () => {
+
         auth.signOut()
+            .then((res) => { setToken('') })
             .catch(err => alert('onSignOut' + err))
     }
 
@@ -84,10 +105,10 @@ export default function GoogleScreen() {
 
     return (
         <View style={styles.container}>
-            <Text style={[styles.title, { marginBottom: 8 }]}>Google</Text>
+            <Text style={[styles.title, { marginBottom: 8 }]}>Facebook</Text>
             <Text style={[styles.title, { marginTop: 0 }]}>Auth Test</Text>
 
-            <Btn t={'Google 登入'} f={() => { signInWithGoogleAsync() }} />
+            <Btn t={'Facebook 登入'} f={() => { onLogIn() }} />
             <Btn t={'登出'} f={() => { onSignOut() }} />
 
             <TouchableOpacity
@@ -96,11 +117,22 @@ export default function GoogleScreen() {
             >
                 <Text style={styles.t_delete}>Delete User</Text>
             </TouchableOpacity>
-            <Button title={'check'} onPress={() => { console.log(auth.currentUser.email) }} />
+            <Button
+                title={'check'}
+                onPress={() => {
+                    try { console.log(auth.currentUser) }
+                    catch (err) { console.log(err) }
+                }}
+            />
 
 
-            {!auth.currentUser ? null : <Text>log in</Text>}
-
+            {!auth.currentUser ? null : <Text>{auth.currentUser.displayName}log in</Text>}
+            {!auth.currentUser ? null :
+                <Image
+                    source={token ? { uri: `${auth.currentUser.photoURL}?height=500&access_token=${token}` } : null}
+                    style={{ width: 50, height: 50, borderWidth: 1, }}
+                />
+            }
             <Modal
                 isVisible={showReAuthModal}
                 onBackButtonPress={() => { setShowReAuthModal(false) }}
